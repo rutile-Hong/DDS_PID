@@ -66,19 +66,19 @@ class QoSConfig:
 class PIDGains:
 
     # Position loop
-    y_kp: float = 1.4
-    y_ki: float = 0.0
+    y_kp: float = 0.9  #0.75
+    y_ki: float = 0.0   #0.05
     y_kd: float = 0.0
 
-    z_kp: float = 2.0
+    z_kp: float = 3.0
     z_ki: float = 0.0
     z_kd: float = 0.0
 
     # Velocity loop
-    vy_kp: float = 0.1
-    vy_ki: float = 0.1
-    vy_kd: float = 0.0
+    vy_kp: float = 4.0  #0.7
+    vy_ki: float = 1.5  #0.0
+    vy_kd: float = 0.0   #0.1
 
-    vz_kp: float = 0.45
+    vz_kp: float = 0.35
     vz_ki: float = 0.35
     vz_kd: float = 0.02

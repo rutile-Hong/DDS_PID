@@ -12,7 +12,7 @@ class PIDController:
         output_limits=(None, None),
         integral_limits=(None, None),
         derivative_on_measurement=True,
-        derivative_cutoff_hz=2.0,
+        derivative_cutoff_hz=5.0,
     ):
         self.Kp = float(Kp)
         self.Ki = float(Ki)

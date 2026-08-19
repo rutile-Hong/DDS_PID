@@ -59,14 +59,14 @@ class CascadePIDController:
             Kp=gains.y_kp,
             Ki=gains.y_ki,
             Kd=gains.y_kd,
-            output_limits=(-0.5, 0.5),
+            output_limits=(-1, 1),
         )
 
         self.pid_z = PIDController(
             Kp=gains.z_kp,
             Ki=gains.z_ki,
             Kd=gains.z_kd,
-            output_limits=(-0.3, 0.3),
+            output_limits=(-0.3,0.3),
         )
 
         #################################################
@@ -77,7 +77,7 @@ class CascadePIDController:
             Kp=gains.vy_kp,
             Ki=gains.vy_ki,
             Kd=gains.vy_kd,
-            output_limits=(-math.pi / 4.0, math.pi / 4.0),
+            output_limits=(-9.0, 9.0),
         )
 
         self.pid_vz = PIDController(
@@ -173,6 +173,59 @@ class CascadePIDController:
     ###########################################################
     # Velocity Loop
     ###########################################################
+    # def velocity_controller(
+    #         self,
+    #         vy,
+    #         vz,
+    #         vy_desired,
+    #         vz_desired,
+    #         dt,
+    #     ):
+    
+    #         self.pid_vy.setpoint = vy_desired
+    #         self.pid_vz.setpoint = vz_desired
+    
+    #         #################################################
+    #         # Roll
+    #         #################################################
+    
+    #         roll_target = -self.pid_vy.update(
+    #             vy,
+    #             dt,
+    #         )
+    
+    #         #################################################
+    #         # Thrust
+    #         #################################################
+    
+    #         thrust = (
+    #             self.pid_vz.update(
+    #                 vz,
+    #                 dt,
+    #             )
+    #             + self.hover_thrust
+    #         )
+    
+    #         #################################################
+    #         # Saturation
+    #         #################################################
+    
+    #         roll_target = self.clamp(
+    #             roll_target,
+    #             -math.pi / 4.0,
+    #             math.pi / 4.0,
+    #         )
+    
+    #         thrust = self.clamp(
+    #             thrust,
+    #             self.thrust_min,
+    #             self.thrust_max,
+    #         )
+    
+    #         return (
+    #             roll_target,
+    #             thrust,
+    #         )
 
     def velocity_controller(
         self,
@@ -187,35 +240,63 @@ class CascadePIDController:
         self.pid_vz.setpoint = vz_desired
 
         #################################################
-        # Roll
+        # Y velocity PID
+        #
+        # Output is desired lateral acceleration [m/s^2]
         #################################################
 
-        roll_target = -self.pid_vy.update(
+        ay_desired = self.pid_vy.update(
             vy,
             dt,
         )
 
         #################################################
-        # Thrust
+        # Convert lateral acceleration to roll angle
         #################################################
 
-        thrust = (
-            self.pid_vz.update(
-                vz,
-                dt,
-            )
-            + self.hover_thrust
+        g = 9.80665
+
+        # Exact relationship assuming vertical thrust
+        # is adjusted to maintain altitude:
+        #
+        # ay = g * tan(roll)
+        #
+        # therefore:
+        #
+        # roll = atan(ay / g)
+
+        roll_target = -math.atan2(
+            ay_desired,
+            g,
         )
 
         #################################################
-        # Saturation
+        # Roll saturation
         #################################################
 
         roll_target = self.clamp(
-            roll_target,
-            -math.pi / 4.0,
-            math.pi / 4.0,
+                roll_target,
+                -math.pi / 4.0,
+                math.pi / 4.0,
+            )
+        
+        #################################################
+        # Z velocity PID -> thrust
+        #################################################
+
+        thrust_correction = self.pid_vz.update(
+            vz,
+            dt,
         )
+
+        thrust = (
+            self.hover_thrust
+            + thrust_correction
+        )
+
+        #################################################
+        # Thrust saturation
+        #################################################
 
         thrust = self.clamp(
             thrust,

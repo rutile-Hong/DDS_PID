@@ -466,7 +466,7 @@ class PIDControlDDSNode(Node):
 
 
         #command.roll_deg = 0.0
-        #command.thrust = 0.1
+        #command.thrust = 0.35
         ###################################################
         # Publish command
         ###################################################
